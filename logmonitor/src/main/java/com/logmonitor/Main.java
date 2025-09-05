@@ -1,5 +1,6 @@
 package com.logmonitor;
 
+import com.logmonitor.constants.Constants;
 import com.logmonitor.objects.Job;
 
 import java.io.BufferedReader;
@@ -17,7 +18,7 @@ public class Main {
 
     public static Map<String, Job> parseJobs(){
         try{
-            FileInputStream fileInputStream = new FileInputStream("logmonitor/src/main/resources/logs[7][50][15].log");
+            FileInputStream fileInputStream = new FileInputStream(Constants.LOG_PATH);
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream));
             Map<String, Job> jobs = new HashMap();
 
@@ -31,9 +32,9 @@ public class Main {
                 Job job = jobs.getOrDefault(jobId, new Job());
                 job.setJobId(jobId);
 
-                if(status.equals("START")) {
+                if(status.equals(Constants.LOG_START)) {
                     job.setStartTime(time);
-                } else if (status.equals("END")) {
+                } else if (status.equals(Constants.LOG_END)) {
                     job.setEndTime(time);
                 }
 
@@ -51,7 +52,7 @@ public class Main {
         
         //I've assumed that if the job hasn't completed at time of processing we mark it as an error
         if(job.getEndTime() == null){
-            job.setStatus("ERROR");
+            job.setStatus(Constants.JOB_ERROR);
             return;
         }
 
@@ -63,30 +64,30 @@ public class Main {
         job.setMinutes(String.valueOf(minutesBetween));
 
         if(minutesBetween<5){
-            job.setStatus("PASS");
+            job.setStatus(Constants.JOB_PASS);
         }
         else if(minutesBetween<10){
-            job.setStatus("WARNING");
+            job.setStatus(Constants.JOB_WARNING);
         }
         else{
-            job.setStatus("ERROR");
+            job.setStatus(Constants.JOB_ERROR);
         }
     }
 
         public static void outputFaultyJobs(Map<String, Job> jobs) {
         try{
-            FileWriter writer = new FileWriter("output.txt");
+            FileWriter writer = new FileWriter(Constants.OUTPUT_PATH);
             for(Job job : jobs.values()){
 
                 //I've decided to treat those jobs that didn't finish by time of processing differently from actual errors, thus the logging is slightly different
                 if(job.getMinutes() == null){
                     writer.write("CAUTION: Job " + job.getJobId() + " starting at " + job.getStartTime() + " was not complete at time of processing.\n");
                 }
-                else if(job.getStatus().equals("WARNING")){
-                    writer.write("WARNING" + ": Job " + job.getJobId() + " starting at " + job.getStartTime() + " took " + job.getMinutes() + " minutes.\n");
+                else if(job.getStatus().equals(Constants.JOB_WARNING)){
+                    writer.write(Constants.JOB_WARNING + ": Job " + job.getJobId() + " starting at " + job.getStartTime() + " took " + job.getMinutes() + " minutes.\n");
                 }
-                else if(job.getStatus().equals("ERROR")){
-                    writer.write("ERROR" + ": Job " + job.getJobId() + " starting at " + job.getStartTime() + " took " + job.getMinutes() + " minutes.\n");
+                else if(job.getStatus().equals(Constants.JOB_ERROR)){
+                    writer.write(Constants.JOB_ERROR + ": Job " + job.getJobId() + " starting at " + job.getStartTime() + " took " + job.getMinutes() + " minutes.\n");
                 }
             }
             writer.close();
