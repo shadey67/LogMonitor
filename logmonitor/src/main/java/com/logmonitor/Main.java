@@ -4,6 +4,8 @@ import com.logmonitor.objects.Job;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -58,6 +60,7 @@ public class Main {
         LocalTime endTime = LocalTime.parse(job.getEndTime(), formatter);
 
         long minutesBetween = ChronoUnit.MINUTES.between(startTime, endTime);
+        job.setMinutes(String.valueOf(minutesBetween));
 
         if(minutesBetween<5){
             job.setStatus("PASS");
@@ -70,10 +73,33 @@ public class Main {
         }
     }
 
+        public static void outputFaultyJobs(Map<String, Job> jobs) {
+        try{
+            FileWriter writer = new FileWriter("output.txt");
+            for(Job job : jobs.values()){
+
+                //I've decided to treat those jobs that didn't finish by time of processing differently from actual errors, thus the logging is slightly different
+                if(job.getMinutes() == null){
+                    writer.write("CAUTION: Job " + job.getJobId() + " starting at " + job.getStartTime() + " was not complete at time of processing.\n");
+                }
+                else if(job.getStatus().equals("WARNING")){
+                    writer.write("WARNING" + ": Job " + job.getJobId() + " starting at " + job.getStartTime() + " took " + job.getMinutes() + " minutes.\n");
+                }
+                else if(job.getStatus().equals("ERROR")){
+                    writer.write("ERROR" + ": Job " + job.getJobId() + " starting at " + job.getStartTime() + " took " + job.getMinutes() + " minutes.\n");
+                }
+            }
+            writer.close();
+        } catch(IOException exception){
+            exception.printStackTrace();
+        }
+    }
+
     public static void main(String[] args) {
         Map<String, Job> jobs = parseJobs();
         for(Job job: jobs.values()){
             getStatus(job);
         }
+        outputFaultyJobs(jobs);
     }
 }
