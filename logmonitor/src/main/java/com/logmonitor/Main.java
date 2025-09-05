@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -16,9 +17,17 @@ import java.util.Map;
 
 public class Main {
 
-    public static Map<String, Job> parseJobs(){
+    public static Map<String, Job> parseJobs() {
+        try (InputStream in = new FileInputStream(Constants.LOG_PATH)) {
+            return parseJobs(in);
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+            return new HashMap<>();
+        }
+    }
+
+    public static Map<String, Job> parseJobs(InputStream fileInputStream){
         try{
-            FileInputStream fileInputStream = new FileInputStream(Constants.LOG_PATH);
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream));
             Map<String, Job> jobs = new HashMap();
 
